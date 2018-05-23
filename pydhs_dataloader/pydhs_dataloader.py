@@ -15,7 +15,7 @@ import subprocess
 ######################################
 class Dataloader:
     def __init__(self, basedir):
-        self.basedir = os.path(basedir)
+        self.basedir = basedir
         self.csvdir = os.path.join(self.basedir, 'csvfiles/')
         self.statadir = os.path.join(self.basedir, 'stata/')
 

@@ -7,12 +7,8 @@ from pydhs_dataloader.pydhs_dataloader import Dataloader
 
 
 
-@click.command()
-@click.argument('basedir', type=click.Path(exists=True))
-@click.argument('login')
-@click.argument('passwd')
-def import(basedir, login, passwd):
 
+def data_import(basedir, login, passwd):
     loader = Dataloader(basedir)
     loader.create_directories()
     loader.unzip_all_files()
@@ -20,8 +16,7 @@ def import(basedir, login, passwd):
     loader.import_csvs_to_database(login, passwd)
     print('Data loaded to database. Refresh the database and check for completion.')
 
-@click.command()
-@click.argument('basedir', type=click.Path(exists=True))
+
 def clean(basedir):
     loader = Dataloader(basedir)
     loader.delete_csv_stata_directories()
@@ -29,4 +24,4 @@ def clean(basedir):
 
 
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+    sys.exit(data_import())  # pragma: no cover

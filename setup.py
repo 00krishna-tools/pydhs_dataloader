@@ -35,7 +35,7 @@ setup(
     description="load raw dhs zip files to database.",
     entry_points={
         'console_scripts': [
-            'pydhs_dataloader=pydhs_dataloader.cli:import',
+            'pydhs_dataloader=pydhs_dataloader.data_loader:data_import',
         ],
     },
     install_requires=requirements,
