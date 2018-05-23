@@ -7,54 +7,57 @@ import zipfile
 import shutil
 import tqdm
 import pandas as pd
-
+import subprocess
 
 ######################################
 ## Functions for extracting zip files
 ##
 ######################################
-def create_directories(basedir):
-    statadir = os.path.join(basedir, 'stata/')
-    csvdir = os.path.join(basedir, 'csvfiles/')
-    if not os.path.exists(statadir):
-        os.mkdir(statadir)
-    if not os.path.exists(csvdir):
-        os.mkdir(csvdir)
-    print('New directories created')
+class Dataloader:
+    def __init__(self, basedir):
+        self.basedir = os.path(basedir)
+        self.csvdir = os.path.join(self.basedir, 'csvfiles/')
+        self.statadir = os.path.join(self.basedir, 'stata/')
 
-    return 0
+    def create_directories(self):
 
-def delete_csv_stata_directories(basedir):
-    statadir = os.path.join(basedir, 'stata/')
-    csvdir = os.path.join(basedir, 'csvfiles/')
-    if os.path.exists(statadir):
-        shutil.rmtree(statadir)
-    if os.path.exists(csvdir):
-        shutil.rmtree(csvdir)
-    print('csv and stata directories removed.')
+        if not os.path.exists(self.statadir):
+            os.mkdir(self.statadir)
+        if not os.path.exists(self.csvdir):
+            os.mkdir(self.csvdir)
+        print('New directories created')
+        return 0
 
-def unzip_all_files(zipdir, statadir):
-    list_zipfiles = list_files(zipdir, 'zip')
-    for f in tqdm(list_zipfiles):
-        unzip_one_file(f, statadir)
-    print('All zip files successfully extracted.')
+    def delete_csv_stata_directories(self):
 
-def unzip_one_file(pathtofile, targetdirectory)
-    zip_ref = zipfile.ZipFile(pathtofile, 'r')
-    zip_ref.extractall(targetdirectory)
-    zip_ref.close()
+        if os.path.exists(self.statadir):
+            shutil.rmtree(self.statadir)
+        if os.path.exists(self.csvdir):
+            shutil.rmtree(self.csvdir)
+        print('csv and stata directories removed.')
+
+    def unzip_all_files(self):
+        list_zipfiles = list_files(self.basedir, 'zip')
+        for f in tqdm(list_zipfiles):
+            unzip_one_file(f, self.statadir)
+        print('All zip files successfully extracted.')
+
+    def unzip_one_file(self, pathtofile):
+        zip_ref = zipfile.ZipFile(pathtofile, 'r')
+        zip_ref.extractall(self.statadir)
+        zip_ref.close()
 
 ######################################
 ## Functions for converting stata to csv
 ##
 ######################################
 
-def write_csv_files_from_stata(statadirectory, csvdirectory):
-    list_statafiles = list_files(statadirectory, 'dta')
-    for f in tqdm(list_statafiles):
-        d = pd.read_stata(f)
-        new_filename = os.path.join(csvdirectory, get_basename_of_file_without_extension(f)+'.csv')
-        d.write_csv(new_filename, header=True, index=None)
+    def write_csv_files_from_stata(self):
+        list_statafiles = list_files(self.statadir, 'dta')
+        for f in tqdm(list_statafiles):
+            d = pd.read_stata(f)
+            new_filename = os.path.join(self.csvdir, get_basename_of_file_without_extension(f)+'.csv')
+            d.write_csv(new_filename, header=True, index=None)
 
 
 ######################################
@@ -63,6 +66,11 @@ def write_csv_files_from_stata(statadirectory, csvdirectory):
 ##
 ######################################
 
+    def import_csvs_to_database(self, login, passwd):
+        list_csvs = list_files(self.csvdir, 'csv')
+        for f in tqdm(list_csvs):
+            cmd = 'pgfutter --db "db_dhs" --port "5432" --schema "public" --user {} --pass {} --ignore-errors csv {} \;'
+            subprocess.call(cmd.format(login, passwd, f))
 
 
 
