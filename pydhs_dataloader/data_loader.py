@@ -6,14 +6,14 @@ import click
 from pydhs_dataloader.pydhs_dataloader import Dataloader
 
 
-
-
 def data_import(basedir, login, passwd):
     loader = Dataloader(basedir)
+    loader.rename_all_zip_files_to_lowercase()
     loader.create_directories()
     loader.unzip_all_files()
+    loader.rename_all_dta_files_to_lowercase()
     loader.write_csv_files_from_stata()
-    loader.import_csvs_to_database(login, passwd)
+    loader.import_csvs_to_database()
     print('Data loaded to database. Refresh the database and check for completion.')
 
 

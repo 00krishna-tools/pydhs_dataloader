@@ -5,9 +5,10 @@
 import os
 import zipfile
 import shutil
-import tqdm
+from tqdm import tqdm
 import pandas as pd
 import subprocess
+from pathlib import Path
 
 ######################################
 ## Functions for extracting zip files
@@ -36,10 +37,20 @@ class Dataloader:
             shutil.rmtree(self.csvdir)
         print('csv and stata directories removed.')
 
+    def rename_all_zip_files_to_lowercase(self):
+        filenames = os.listdir(self.basedir)
+        for filename in filenames:
+            os.rename(os.path.join(self.basedir, filename), os.path.join(self.basedir, filename.lower()))
+
+    def rename_all_dta_files_to_lowercase(self):
+        filenames = os.listdir(self.statadir)
+        for filename in filenames:
+            os.rename(os.path.join(self.statadir, filename), os.path.join(self.statadir, filename.lower()))
+
     def unzip_all_files(self):
         list_zipfiles = list_files(self.basedir, 'zip')
         for f in tqdm(list_zipfiles):
-            unzip_one_file(f, self.statadir)
+            self.unzip_one_file(f)
         print('All zip files successfully extracted.')
 
     def unzip_one_file(self, pathtofile):
@@ -55,9 +66,9 @@ class Dataloader:
     def write_csv_files_from_stata(self):
         list_statafiles = list_files(self.statadir, 'dta')
         for f in tqdm(list_statafiles):
-            d = pd.read_stata(f)
+            d = pd.read_stata(f, convert_categoricals=False)
             new_filename = os.path.join(self.csvdir, get_basename_of_file_without_extension(f)+'.csv')
-            d.write_csv(new_filename, header=True, index=None)
+            d.to_csv(new_filename.lower(), header=True, index=None)
 
 
 ######################################
@@ -66,11 +77,10 @@ class Dataloader:
 ##
 ######################################
 
-    def import_csvs_to_database(self, login, passwd):
-        list_csvs = list_files(self.csvdir, 'csv')
-        for f in tqdm(list_csvs):
-            cmd = 'pgfutter --db "db_dhs" --port "5432" --schema "public" --user {} --pass {} --ignore-errors csv {} \;'
-            subprocess.call(cmd.format(login, passwd, f))
+    def import_csvs_to_database(self):
+        cmd = './import_tables {}'
+        cmd = cmd.format(self.csvdir)
+        subprocess.call(cmd)
 
 
 
@@ -78,11 +88,11 @@ class Dataloader:
 
 def list_files(directory, extension):
     file_list = []
-    for (dirpath, dirnames, filenames) in walk(directory):
+    for (dirpath, dirnames, filenames) in os.walk(directory):
         for f in filenames:
             if f.endswith('.' + extension):
                 file_list.append(os.path.join(dirpath, f))
     return file_list
 
 def get_basename_of_file_without_extension(file):
-    return os.path.splitext(file)[0]
+    return os.path.splitext(Path(file).name)[0].lower()
